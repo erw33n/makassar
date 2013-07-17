@@ -120,7 +120,7 @@ public class FrmReport extends javax.swing.JFrame {
         fileChooser.addChoosableFileFilter(new MyFilter());
         fileChooser.setSelectedFile(new File("Export"));
         int retval = fileChooser.showDialog(this, "Simpan File");
-        setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        this.setCursor(new Cursor(Cursor.WAIT_CURSOR));
         if (retval == JFileChooser.APPROVE_OPTION) {
             f = fileChooser.getSelectedFile();
             System.out.println(f.getAbsolutePath());
@@ -236,7 +236,7 @@ public class FrmReport extends javax.swing.JFrame {
 
             workbook.write();
             workbook.close();
-            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             JOptionPane.showMessageDialog(this, "Export data sukses!");
             Runtime rt = Runtime.getRuntime();
             try {

@@ -4,9 +4,14 @@
  */
 package accounting;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.MissingResourceException;
+import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JLayeredPane;
@@ -19,9 +24,23 @@ import javax.swing.UnsupportedLookAndFeelException;
  * @author ustadho
  */
 public class MainForm extends javax.swing.JFrame {
+    private static PropertyResourceBundle resources;
 
     private Connection conn;
-
+    
+    static {
+        try {
+            String sDir=System.getProperties().getProperty("user.dir");
+            resources = new PropertyResourceBundle(new FileInputStream(new File(sDir+"/setting.properties")));
+            
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        } catch (MissingResourceException mre) {
+            System.err.println("setting.properties not found");
+            System.exit(1);
+        }
+    }
+    
     /**
      * Creates new form MainForm
      */
@@ -33,7 +52,8 @@ public class MainForm extends javax.swing.JFrame {
             initComponents();
 
             conn = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/SHMK", "test", "test");
+                    "jdbc:postgresql://"+resources.getString("server")+":5432/"
+                    + resources.getString("database"), "test", "test");
             
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
@@ -44,7 +64,9 @@ public class MainForm extends javax.swing.JFrame {
         } catch (UnsupportedLookAndFeelException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SQLException ex) {
-            Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+            System.exit(0);
         }
     }
 
@@ -62,9 +84,9 @@ public class MainForm extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
-        jMenuItem2 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem5 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
         jMenu5 = new javax.swing.JMenu();
         jMenuItem4 = new javax.swing.JMenuItem();
         jMenu4 = new javax.swing.JMenu();
@@ -82,7 +104,7 @@ public class MainForm extends javax.swing.JFrame {
         getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.LINE_AXIS));
         getContentPane().add(jDesktopPane1);
 
-        jMenu1.setText("Macam Form");
+        jMenu1.setText("Test");
 
         jMenuItem1.setText("Internal Frame");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
@@ -91,16 +113,6 @@ public class MainForm extends javax.swing.JFrame {
             }
         });
         jMenu1.add(jMenuItem1);
-
-        jMenuItem2.setText("Exit");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem2);
-
-        jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Data");
 
@@ -112,7 +124,17 @@ public class MainForm extends javax.swing.JFrame {
         });
         jMenu2.add(jMenuItem5);
 
-        jMenuBar1.add(jMenu2);
+        jMenu1.add(jMenu2);
+
+        jMenuItem2.setText("Exit");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem2);
+
+        jMenuBar1.add(jMenu1);
 
         jMenu5.setText("Report");
 
