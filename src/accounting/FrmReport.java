@@ -4,11 +4,37 @@
  */
 package accounting;
 
+import java.awt.Cursor;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Properties;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import jxl.Workbook;
+import jxl.WorkbookSettings;
+import jxl.write.Label;
+import jxl.write.NumberFormats;
+import jxl.write.WritableCellFormat;
+import jxl.write.WritableFont;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+
 /**
  *
  * @author ustadho
  */
 public class FrmReport extends javax.swing.JFrame {
+
+    private JFileChooser fileChooser = new JFileChooser();
+    File f = null;
+    private GeneralFunction fn = new GeneralFunction();
+    private Connection conn;
 
     /**
      * Creates new form FrmReport
@@ -30,10 +56,10 @@ public class FrmReport extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         btnClose = new javax.swing.JButton();
         btnPreview = new javax.swing.JButton();
-        tblAkhir = new org.jdesktop.swingx.JXDatePicker();
+        tglAkhir = new org.jdesktop.swingx.JXDatePicker();
         tglAwal = new org.jdesktop.swingx.JXDatePicker();
         jLabel3 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox();
+        cmbReport = new javax.swing.JComboBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Report Accounting");
@@ -57,10 +83,15 @@ public class FrmReport extends javax.swing.JFrame {
         btnClose.setBounds(230, 140, 73, 23);
 
         btnPreview.setText("Preview");
+        btnPreview.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPreviewActionPerformed(evt);
+            }
+        });
         getContentPane().add(btnPreview);
         btnPreview.setBounds(150, 140, 71, 23);
-        getContentPane().add(tblAkhir);
-        tblAkhir.setBounds(130, 100, 130, 22);
+        getContentPane().add(tglAkhir);
+        tglAkhir.setBounds(130, 100, 130, 22);
         getContentPane().add(tglAwal);
         tglAwal.setBounds(130, 70, 130, 22);
 
@@ -68,9 +99,9 @@ public class FrmReport extends javax.swing.JFrame {
         getContentPane().add(jLabel3);
         jLabel3.setBounds(10, 70, 60, 20);
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Rekap Penerimaan", "Detail Penerimaan" }));
-        getContentPane().add(jComboBox1);
-        jComboBox1.setBounds(130, 40, 330, 20);
+        cmbReport.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Rekap Penerimaan", "Detail Penerimaan" }));
+        getContentPane().add(cmbReport);
+        cmbReport.setBounds(130, 40, 330, 20);
 
         setBounds(0, 0, 483, 207);
     }// </editor-fold>//GEN-END:initComponents
@@ -78,6 +109,160 @@ public class FrmReport extends javax.swing.JFrame {
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         this.dispose();
     }//GEN-LAST:event_btnCloseActionPerformed
+
+    private void btnPreviewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreviewActionPerformed
+        Properties prop = System.getProperties();
+        String sDir = prop.getProperty("user.dir");
+        File dir = new File(sDir);
+        String sTgl1 = new SimpleDateFormat("yyyy-MM-dd").format(tglAwal.getDate());
+        String sTgl2 = new SimpleDateFormat("yyyy-MM-dd").format(tglAkhir.getDate());
+
+        fileChooser.addChoosableFileFilter(new MyFilter());
+        fileChooser.setSelectedFile(new File("Export"));
+        int retval = fileChooser.showDialog(this, "Simpan File");
+        setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            f = fileChooser.getSelectedFile();
+            System.out.println(f.getAbsolutePath());
+            String sFile = f.getAbsolutePath();
+            int i = cmbReport.getSelectedIndex();
+            switch (i) {
+                case 0: { //Laporan ke 1{
+                    String sQry = "select * from fn_acc_rpt_cath_trx_detail('" + sTgl1 + "', '" + sTgl2 + "') as "
+                            + "(no_nota varchar, tanggal date, kamar varchar, kelas varchar, no_reg varchar, no_reg_rujukan varchar, nama varchar, kode_jenis_pembayaran varchar, "
+                            + "keterangan_jenis_bayar varchar, corporate varchar, item_code varchar, item_name varchar, jumlah smallint, biaya double precision, "
+                            + "discount double precision, dokter_merawat text, dokter_operator text)";
+                    udfExportToExcel(sQry, sFile);
+                    
+                    break;
+                }
+                case 1: { //Laporan ke 1{
+                    String sQry = "select * from fn_acc_test('" + sTgl1 + "', '" + sTgl2 + "', '002') as (transaction_date timestamp without time zone, no_reg varchar, patient_number text, patient_name text, \n"
+                            + "nama_poli varchar, dokter text, jasa_medis double precision, admin double precision, pharmacy double precision, consumables double precision, \n"
+                            + "lab_name varchar, lab_amount double precision, rad_name varchar, rad_amount double precision, rad_Ket varchar, fisio_name varchar, fisio_amount double precision, \n"
+                            + "procedure double precision)";
+                    udfExportToExcel(sQry, sFile);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+    }//GEN-LAST:event_btnPreviewActionPerformed
+
+    public class MyFilter extends javax.swing.filechooser.FileFilter {
+
+        public boolean accept(File file) {
+            String filename = file.getName();
+            return filename.endsWith(".xls");
+        }
+
+        public String getDescription() {
+            return "*.xls";
+        }
+    }
+
+    private void udfExportToExcel(String sQry, String sFile) {
+        try {
+            Properties prop = System.getProperties();
+//            String sDir=prop.getProperty("user.dir");
+//            File dir = new File(sDir);
+//            String sFile=sDir+dir.separator+"Reports"+dir.separator+"PGN-Rekap Obat Alkes"+
+//                    "-"+new SimpleDateFormat("yyMMdd").format(jcTglAwal.getDate())+"-"
+//                    +   new SimpleDateFormat("yyMMdd").format(jcTglAkhir.getDate())+".xls";
+//            File f=null;
+//            JFileChooser fileChooser=new JFileChooser(); 
+//            fileChooser.addChoosableFileFilter(new MyFilter());
+//            //fileChooser.setSelectedFile(new File(sFile));
+//            int retval = fileChooser.showDialog(this, "Simpan File");
+//
+//            if (retval != JFileChooser.APPROVE_OPTION) return;
+//            String sFile=fileChooser.getSelectedFile().toString();
+            sFile = sFile.indexOf(".xls") > 0 ? sFile : sFile + ".xls";
+
+            f = new File(sFile);
+
+            WorkbookSettings ws = new WorkbookSettings();
+            ws.setLocale(new Locale("en", "EN"));
+            //WritableWorkbook workbook = Workbook.createWorkbook(fChoosen);
+            WritableWorkbook workbook = Workbook.createWorkbook(new File(f.toString()), ws);
+            WritableSheet sheet = workbook.createSheet("Sheet1", 0);
+
+            WritableFont arial10font = new WritableFont(WritableFont.ARIAL, 10);
+            WritableCellFormat arial10format = new WritableCellFormat(arial10font);
+
+            WritableFont arial10fontBold = new WritableFont(WritableFont.ARIAL, 10, WritableFont.BOLD);
+            WritableCellFormat ariaBold10format = new WritableCellFormat(arial10fontBold);
+
+            WritableFont arial12fontBold = new WritableFont(WritableFont.ARIAL, 12, WritableFont.BOLD);
+            WritableCellFormat arial12format = new WritableCellFormat(arial12fontBold);
+
+            //DateFormat customDateFormat = new DateFormat ("dd MMM yyyy hh:mm:ss");
+            jxl.write.DateFormat customDateFormat = new jxl.write.DateFormat("dd/MM/yyyy");
+            WritableCellFormat dateFormat = new WritableCellFormat(customDateFormat);
+
+            WritableCellFormat cellNumberFmt = new WritableCellFormat(NumberFormats.THOUSANDS_FLOAT);
+
+            WritableCellFormat cellIntFmt = new WritableCellFormat(NumberFormats.INTEGER);
+            Number number2;
+            setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            ResultSet rs = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY).executeQuery(sQry);
+            Label label;
+            int row = 0;
+            for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+                label = new Label(i, row, rs.getMetaData().getColumnName(i + 1), ariaBold10format);
+                sheet.addCell(label);
+            }
+
+            while (rs.next()) {
+                row++;
+                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                    if (rs.getObject(i) != null && (rs.getMetaData().getColumnType(i) == java.sql.Types.VARCHAR || rs.getMetaData().getColumnType(i) == java.sql.Types.CHAR)) {
+                        sheet.addCell(new Label(i - 1, row, rs.getString(i)));
+                    } else if (rs.getMetaData().getColumnType(i) == java.sql.Types.DOUBLE && rs.getObject(i) != null) {
+                        sheet.addCell(new jxl.write.Number(i - 1, row, rs.getDouble(i)));
+                    } else if (rs.getObject(i) != null && (rs.getMetaData().getColumnType(i) == java.sql.Types.INTEGER || rs.getMetaData().getColumnType(i) == java.sql.Types.BIGINT)) {
+                        sheet.addCell(new jxl.write.Number(i - 1, row, rs.getInt(i)));
+                    } else if (rs.getMetaData().getColumnType(i) == java.sql.Types.TIMESTAMP && rs.getObject(i) != null) {
+                        sheet.addCell(new jxl.write.DateTime(i - 1, row, rs.getTimestamp(i), dateFormat));
+                    } else if (rs.getMetaData().getColumnType(i) == java.sql.Types.DATE && rs.getObject(i) != null) {
+                        sheet.addCell(new jxl.write.DateTime(i - 1, row, rs.getDate(i), dateFormat));
+                    }
+                }
+
+            }
+            rs.close();
+
+            workbook.write();
+            workbook.close();
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            JOptionPane.showMessageDialog(this, "Export data sukses!");
+            Runtime rt = Runtime.getRuntime();
+            try {
+
+                //String sExcel="\"c:\\POTONGAN 12.xls\"";
+                //String sExcel="\""+sDir+dir.separator+ "Test.xls\"";
+                //String sExcel="\""+sDir+dir.separator+"Tagihan "+sMasa+ ".xls\"";
+                String sExcel = "\"" + sFile + "\"";
+
+                rt.exec(new String[]{"cmd", "/c", "start excel " + sExcel});
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            //JOptionPane.showMessageDialog(this, "Export data sukses!");
+        } catch (WriteException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+
+    }
 
     /**
      * @param args the command line arguments
@@ -116,11 +301,15 @@ public class FrmReport extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClose;
     private javax.swing.JButton btnPreview;
-    private javax.swing.JComboBox jComboBox1;
+    private javax.swing.JComboBox cmbReport;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private org.jdesktop.swingx.JXDatePicker tblAkhir;
+    private org.jdesktop.swingx.JXDatePicker tglAkhir;
     private org.jdesktop.swingx.JXDatePicker tglAwal;
     // End of variables declaration//GEN-END:variables
+
+    void setConn(Connection conn) {
+        this.conn = conn;
+    }
 }
