@@ -5,6 +5,8 @@
 package accounting;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JLayeredPane;
@@ -17,17 +19,22 @@ import javax.swing.UnsupportedLookAndFeelException;
  * @author ustadho
  */
 public class MainForm extends javax.swing.JFrame {
+
     private Connection conn;
-    
+
     /**
      * Creates new form MainForm
      */
+    //Constructor
+    //Yg pertama kali dijalankan oleh Java
     public MainForm() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             initComponents();
+
+            conn = DriverManager.getConnection(
+                    "jdbc:postgresql://localhost:5432/SHMK", "test", "test");
             
-             
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
@@ -35,6 +42,8 @@ public class MainForm extends javax.swing.JFrame {
         } catch (IllegalAccessException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         } catch (UnsupportedLookAndFeelException ex) {
+            Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
             Logger.getLogger(MainForm.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -54,6 +63,8 @@ public class MainForm extends javax.swing.JFrame {
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        jMenuItem5 = new javax.swing.JMenuItem();
         jMenu5 = new javax.swing.JMenu();
         jMenuItem4 = new javax.swing.JMenuItem();
         jMenu4 = new javax.swing.JMenu();
@@ -91,6 +102,18 @@ public class MainForm extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu1);
 
+        jMenu2.setText("Data");
+
+        jMenuItem5.setText("Tabel Kota");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem5);
+
+        jMenuBar1.add(jMenu2);
+
         jMenu5.setText("Report");
 
         jMenuItem4.setText("Report Accounting");
@@ -125,12 +148,12 @@ public class MainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        About f1=new About(this, true);
+        About f1 = new About(this, true);
         f1.setVisible(true);
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
     private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
-        FrmReport f1=new FrmReport();
+        FrmReport f1 = new FrmReport();
         f1.setVisible(true);
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
@@ -138,10 +161,17 @@ public class MainForm extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowOpened
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        FrmInternalFrame f1=new FrmInternalFrame();
+        FrmInternalFrame f1 = new FrmInternalFrame();
         jDesktopPane1.add(f1, JLayeredPane.DEFAULT_LAYER);
         f1.setVisible(true);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+        FrmKota f1 = new FrmKota();
+        f1.kirimKoneksi(conn);
+        jDesktopPane1.add(f1, JLayeredPane.DEFAULT_LAYER);
+        f1.setVisible(true);
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -180,6 +210,7 @@ public class MainForm extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenu jMenu5;
@@ -188,5 +219,6 @@ public class MainForm extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
     // End of variables declaration//GEN-END:variables
 }
