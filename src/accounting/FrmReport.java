@@ -10,9 +10,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import jxl.Workbook;
@@ -24,6 +28,12 @@ import jxl.write.WritableFont;
 import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 import jxl.write.WriteException;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.view.JasperViewer;
 
 /**
  *
@@ -60,6 +70,7 @@ public class FrmReport extends javax.swing.JFrame {
         tglAwal = new org.jdesktop.swingx.JXDatePicker();
         jLabel3 = new javax.swing.JLabel();
         cmbReport = new javax.swing.JComboBox();
+        btnPreview1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Report Accounting");
@@ -91,9 +102,9 @@ public class FrmReport extends javax.swing.JFrame {
         getContentPane().add(btnPreview);
         btnPreview.setBounds(150, 140, 71, 23);
         getContentPane().add(tglAkhir);
-        tglAkhir.setBounds(130, 100, 130, 22);
+        tglAkhir.setBounds(130, 100, 126, 22);
         getContentPane().add(tglAwal);
-        tglAwal.setBounds(130, 70, 130, 22);
+        tglAwal.setBounds(130, 70, 126, 22);
 
         jLabel3.setText("Mulai");
         getContentPane().add(jLabel3);
@@ -102,6 +113,15 @@ public class FrmReport extends javax.swing.JFrame {
         cmbReport.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Rekap Penerimaan", "Detail Penerimaan" }));
         getContentPane().add(cmbReport);
         cmbReport.setBounds(130, 40, 330, 20);
+
+        btnPreview1.setText("iReport");
+        btnPreview1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPreview1ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(btnPreview1);
+        btnPreview1.setBounds(41, 140, 90, 23);
 
         setBounds(0, 0, 483, 207);
     }// </editor-fold>//GEN-END:initComponents
@@ -133,7 +153,7 @@ public class FrmReport extends javax.swing.JFrame {
                             + "keterangan_jenis_bayar varchar, corporate varchar, item_code varchar, item_name varchar, jumlah smallint, biaya double precision, "
                             + "discount double precision, dokter_merawat text, dokter_operator text)";
                     udfExportToExcel(sQry, sFile);
-                    
+
                     break;
                 }
                 case 1: { //Laporan ke 1{
@@ -150,6 +170,32 @@ public class FrmReport extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_btnPreviewActionPerformed
+
+    private void btnPreview1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPreview1ActionPerformed
+        try {
+            HashMap reportParam = new HashMap();
+            JasperReport jasperReport = null;
+            DateFormat dformat = new SimpleDateFormat("yyyy-MM-dd");
+            //            String tglAwal = dformat.format(tglAwal.getDate());
+            //            String tglAkhir = dformat.format(tglAkhir.getDate());
+            reportParam.put("tanggal1", tglAwal);
+            reportParam.put("tanggal2", tglAkhir);
+
+            this.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+            //System.out.println(getClass().getResourceAsStream("Reports/"+sReport+".jasper"));
+            jasperReport = (JasperReport) JRLoader.loadObject(getClass().getResourceAsStream("reports/Rekap.jasper"));
+            JasperPrint print = JasperFillManager.fillReport(jasperReport, reportParam, conn);
+            //print.setOrientation(jasperReport.getOrientation());
+            this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            if (print.getPages().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Report tidak ditemukan!");
+            } else {
+                JasperViewer.viewReport(print, false);
+            }
+        } catch (JRException ex) {
+            Logger.getLogger(FrmReport.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnPreview1ActionPerformed
 
     public class MyFilter extends javax.swing.filechooser.FileFilter {
 
@@ -301,6 +347,7 @@ public class FrmReport extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnClose;
     private javax.swing.JButton btnPreview;
+    private javax.swing.JButton btnPreview1;
     private javax.swing.JComboBox cmbReport;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
